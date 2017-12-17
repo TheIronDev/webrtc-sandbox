@@ -1,0 +1,22 @@
+{
+  "name": "webrtc-sandbox",
+  "version": "1.0.0",
+  "description": "WebRTC sandbox",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TheIronDev/webrtc-sandbox.git"
+  },
+  "author": "Tyler Stark <TheIronDeveloper@gmail.com> (http://www.theirondeveloper.com/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/TheIronDev/webrtc-sandbox/issues"
+  },
+  "homepage": "https://github.com/TheIronDev/webrtc-sandbox#readme",
+  "dependencies": {
+    "hapi": "^17.1.1"
+  }
+}
