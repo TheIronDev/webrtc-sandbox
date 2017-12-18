@@ -4,6 +4,7 @@
   "description": "WebRTC sandbox",
   "main": "index.js",
   "scripts": {
+    "start": "node .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -17,6 +18,8 @@
   },
   "homepage": "https://github.com/TheIronDev/webrtc-sandbox#readme",
   "dependencies": {
-    "hapi": "^17.1.1"
+    "hapi": "^17.1.1",
+    "inert": "^5.0.1",
+    "path": "^0.12.7"
   }
 }

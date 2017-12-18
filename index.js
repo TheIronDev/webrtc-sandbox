@@ -1,24 +1,36 @@
 'use strict';
 
 const Hapi = require('hapi');
+const Inert = require('inert');
+const Path = require('path');
 
 // Create a server with a host and port
 const server = Hapi.server({
   host: 'localhost',
-  port: 8000
-});
-
-// Add the route
-server.route({
-  method: 'GET',
-  path:'/hello',
-  handler: (request, h) =>  {
-    return 'hello world';
+  port: '3000',
+  routes: {
+    files: {
+      relativeTo: Path.join(__dirname, 'public')
+    }
   }
 });
 
 // Start the server
 async function start() {
+
+  await server.register(Inert);
+
+  server.route({
+    method: 'GET',
+    path: '/{param*}',
+    handler: {
+      directory: {
+        path: '.',
+        redirectToSlash: true,
+        index: true,
+      }
+    }
+  });
 
   try {
     await server.start();
