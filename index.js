@@ -3,6 +3,7 @@
 const Hapi = require('hapi');
 const Inert = require('inert');
 const Path = require('path');
+const socketIO = require('socket.io');
 
 // Create a server with a host and port
 const server = Hapi.server({
@@ -17,6 +18,34 @@ const server = Hapi.server({
 
 // Start the server
 async function start() {
+
+  const io = socketIO(server.listener);
+  let users = {};
+  let userIds = [];
+
+  io.on('connection', (socket) => {
+
+    // The login event binds the socket id to the userId for private messaging.
+    socket.on('login', (userId) => {
+      users[userId] = socket.id;
+    });
+
+    socket.on('join', (userId) => {
+      userIds = userIds.filter((user) => user !== userId);
+      userIds.push(userId);
+      io.emit('join', {userIds, userId});
+    });
+
+    socket.on('leave', (userId) => {
+      userIds = userIds.filter((user) => user !== userId);
+      io.emit('leave', {userIds, userId});
+    });
+
+    socket.on('message', ({from, to, message}) => {
+      // Send a private message.
+      socket.to(users[to]).emit('receivedMessage', `${from}: ${message}`);
+    });
+  });
 
   await server.register(Inert);
 

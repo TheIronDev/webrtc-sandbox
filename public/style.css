@@ -1,1 +1,12 @@
-body {font-family: sans-serif}
+body {font-family: sans-serif; font-size: 10px;}
+ul {list-style: none; padding: 0}
+
+.dialog {
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 2px -2px #666;
+  padding: 1rem;
+  position: fixed;
+  right: 1rem;
+  top: 1rem;
+  width: 10rem;
+}
