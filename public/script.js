@@ -1,9 +1,12 @@
 'use strict';
 
 const dialogEl = document.getElementById('dialog');
+const localVideoEl = document.getElementById('localVideo');
 const messageEl = document.getElementById('message');
+const remoteVideoEl = document.getElementById('remoteVideo');
 const sendEl = document.getElementById('send');
 const socket = io.connect();
+const startVideoButtonEl = document.getElementById('startVideoButton');
 const usersEl = document.getElementById('users');
 
 // Temporary solution, this has a high probability of collusion.
@@ -73,6 +76,14 @@ function removeUser({userId}) {
   displayDialogMessage(`${userId} left`);
 }
 
+function startLocalVideo() {
+  // Note: Verify browser supports this, and catch failures.
+  navigator.mediaDevices.getUserMedia({video: true})
+      .then((mediaStream) => {
+        localVideoEl.srcObject = mediaStream;
+      });
+}
+
 socket.emit('login', currentUserId);
 socket.emit('join', currentUserId);
 
@@ -90,6 +101,8 @@ sendEl.addEventListener('click', () => {
   socket.emit('message', {message, to: userId, from: currentUserId});
   messageEl.value = '';
 });
+
+startVideoButtonEl.addEventListener('click', startLocalVideo);
 
 window.addEventListener('unload', () => {
   socket.emit('leave', currentUserId);

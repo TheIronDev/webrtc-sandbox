@@ -1,5 +1,6 @@
 body {font-family: sans-serif; font-size: 10px;}
 ul {list-style: none; padding: 0}
+video {max-width: 300px;}
 
 .dialog {
   border: 1px solid #ccc;
