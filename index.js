@@ -45,6 +45,18 @@ async function start() {
       // Send a private message.
       socket.to(users[to]).emit('receivedMessage', `${from}: ${message}`);
     });
+
+    socket.on('offer', ({from, to, description}) => {
+      socket.to(users[to]).emit('receivedOffer', {from, description});
+    });
+
+    socket.on('answer', ({from, to, description}) => {
+      socket.to(users[to]).emit('receivedAnswer', {from, description});
+    });
+
+    socket.on('iceCandidate', ({from, to, candidate}) => {
+      socket.to(users[to]).emit('receivedIceCandidate', {from, candidate});
+    });
   });
 
   await server.register(Inert);
