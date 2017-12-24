@@ -181,7 +181,7 @@ call.addEventListener('click', () => {
   startLocalVideo().then(createOffer);
 });
 
-window.addEventListener('unload', () => {
+window.addEventListener('beforeunload', () => {
   socket.emit('leave', currentUserId);
   peerConnection.close();
 });

@@ -1,6 +1,6 @@
 {
   "name": "webrtc-sandbox",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "WebRTC sandbox",
   "main": "index.js",
   "scripts": {
@@ -22,5 +22,8 @@
     "inert": "^5.0.1",
     "path": "^0.12.7",
     "socket.io": "^2.0.4"
+  },
+  "engines": {
+    "node": "8.8.1"
   }
 }
