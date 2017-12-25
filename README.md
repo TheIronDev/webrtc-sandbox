@@ -121,31 +121,16 @@ connection, and instead was falling back on polling.
 
 The root cause had something to do with the nginx configuration.
 
-The best *solution* I found was to update the following:
+The best *solution* I found was to create an `ebextension` config that creates
+a new nginx proxy config and removes the existing one.
 
-```
-# ssh into my project.
-sudo vim /etc/nginx/conf.d/00_elastic_beanstalk_proxy.conf
-```
+Source
+https://forums.aws.amazon.com/thread.jspa?messageID=586894
 
-Making the following update:
+The reason the existing solution doesn't work is because any deployments (like
+`eb deploy ___`) would cause the proxy config to reset. By using a `config`
+file, it operates as a hook to update the nginx config.
 
-```
- ...
- location / {
-        ...
-        proxy_set_header   Upgrade $http_upgrade;
-        proxy_set_header   Connection "upgrade";
-        ...
-```
-
-Afterward, I ran the following:
-
-```
-sudo service nginx restart
-```
-
-And magically websocket connections were not getting degraded to polling. Yay!
 
 ## Development and forking
 
