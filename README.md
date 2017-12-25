@@ -90,26 +90,26 @@ I'm documenting the problems I encountered and the steps I took so that
 hopefully someone (myself included) may be saved from a little bit of pain.
 
 1. Custom Domain
-  1. You need to assign a certificate to your application, but you don't own
+   1. You need to assign a certificate to your application, but you don't own
      elasticbeanstalk.com, so you're likely stuck with getting a custom domain.
-  1. Get a domain from anywhere, doesn't matter where, you're going to be
+   1. Get a domain from anywhere, doesn't matter where, you're going to be
      updating dns records. to point to a load balancer.
 1. SSL Certificate
-  1. Get a certificate for your domain. There's a lot of resources on this,
+   1. Get a certificate for your domain. There's a lot of resources on this,
      even some free resources too.
 1. Upload your SSL Certificate with ACM
-  1. Upload your certificate to ACM
-  1. You may be given a code to verify using a CNAME record that may contain
+   1. Upload your certificate to ACM
+   1. You may be given a code to verify using a CNAME record that may contain
      underscores. Namecheap apparently doesn't allow these value, but TXT
      records can act as a replacement for CNAME records.
 1. Setup load balancer / add HTTPS port 443 listener
-  1. https://colintoh.com/blog/configure-ssl-for-aws-elastic-beanstalk
-  1. After this step, you should be able to hit your application with http and
+   1. https://colintoh.com/blog/configure-ssl-for-aws-elastic-beanstalk
+   1. After this step, you should be able to hit your application with http and
      https.
 1. Wire custom domain to load balancer
-  1. Helpful link: http://techgenix.com/namecheap-aws-ec2-linux/
-  1. NOTE: use the load balance url instead of the elastic beanstalk url
-  1. NOTE: Add the ns records directly so you can add additional records.
+   1. Helpful link: http://techgenix.com/namecheap-aws-ec2-linux/
+   1. NOTE: use the load balance url instead of the elastic beanstalk url
+   1. NOTE: Add the ns records directly so you can add additional records.
   
 
 ### `Error during WebSocket handshake: Unexpected response code: 400`
