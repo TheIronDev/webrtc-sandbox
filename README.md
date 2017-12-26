@@ -7,12 +7,11 @@ A simple video chat application.
 
 ## Motivation
 
-The intent of this project is learn and play around with WebRTC. :+1:
+The intent of this project is learn and play around with WebRTC.
 
 ## TODO:
 
-- [ ] Turn / stun
-- [ ] Prettier UI
+- [ ] Create a custom stun server (Turn sounds pricey).
 
 ## Architecture
 
@@ -127,9 +126,15 @@ a new nginx proxy config and removes the existing one.
 Source
 https://forums.aws.amazon.com/thread.jspa?messageID=586894
 
-The reason the existing solution doesn't work is because any deployments (like
+The reason the existing solution does not work is because any deployments (i.e.
 `eb deploy ___`) would cause the proxy config to reset. By using a `config`
 file, it operates as a hook to update the nginx config.
+
+### Video wasn't displaying, but offer/answers were sent.
+
+There's a very wide variety of reasons why this may occur. Things may magically
+start working if you simply include adapterjs. Its also worth creating
+DataChannels to see if messages are sent back and forth.
 
 
 ## Development and forking

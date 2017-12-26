@@ -3,17 +3,33 @@
 const call = document.getElementById('call');
 const dialogEl = document.getElementById('dialog');
 const localVideoEl = document.getElementById('localVideo');
-const messageEl = document.getElementById('message');
-const remoteVideoEl = document.getElementById('remoteVideo');
-const sendEl = document.getElementById('send');
+const dataChannelSendEl = document.getElementById('dataChannelSend');
+const dataChannelReceiveEl = document.getElementById('dataChannelReceive');
+const sendDatachannelEl = document.getElementById('sendDatachannel');
+const sendWebsocketEl = document.getElementById('sendWebsocket');
 const socket = io.connect();
+const userIdEl = document.getElementById('userId');
 const usersEl = document.getElementById('users');
 const videosEl = document.getElementById('videos');
+const websocketSendEl = document.getElementById('websocketSend');
+const websocketReceiveEl = document.getElementById('websocketReceive');
 
 // Temporary solution, this has a high probability of collision.
 const currentUserId = ~~(Math.random()*1000);
-let selectedUserId;
+
+// A list of google owned stun servers. Its better if I use my own instead.
+const iceServers = [
+  {"urls":"stun:stun.l.google.com:19302"},
+  {"urls":"stun:stun1.l.google.com:19302"},
+  {"urls":"stun:stun2.l.google.com:19302"},
+  {"urls":"stun:stun3.l.google.com:19302"},
+  {"urls":"stun:stun4.l.google.com:19302"}
+];
+const configuration = {iceServers};
+const streams = [];
 let peerConnection;
+let localChannel;
+let selectedUserId;
 
 /**
  * Displays a dialog message. This mostly acts as a helper method.
@@ -91,7 +107,7 @@ function removeUser({userId}) {
  * @return {!Promise<undefined>}
  */
 function startLocalVideo() {
-  if (localVideo.srcObject) {
+  if (localVideoEl.srcObject) {
     return Promise.resolve();
   }
   // Note: Verify browser supports this, and catch failures.
@@ -99,7 +115,7 @@ function startLocalVideo() {
       .then((mediaStream) => {
         localVideoEl.srcObject = mediaStream;
         mediaStream.getTracks().forEach((track) => {
-          peerConnection.addTrack(track);
+          peerConnection.addTrack(track, mediaStream);
         });
       });
 }
@@ -156,10 +172,13 @@ function receiveIceCandidate({candidate}) {
 
 socket.emit('login', currentUserId);
 socket.emit('join', currentUserId);
+userIdEl.innerText = currentUserId;
 
 socket.on('join', addUsers);
 socket.on('leave', removeUser);
-socket.on('receivedMessage', displayDialogMessage);
+socket.on('receivedMessage', (msg) => {
+  websocketReceiveEl.value = `${msg}\n${websocketReceiveEl.value}`;
+});
 
 // PeerConnection related
 socket.on('receivedOffer', receiveOffer);
@@ -170,15 +189,14 @@ usersEl.addEventListener('change', (ev) => {
   selectedUserId = parseInt(ev.target.value, 10);
 });
 
-sendEl.addEventListener('click', () => {
-  const message = messageEl.value;
+// Sends a text message to a different client.
+sendWebsocketEl.addEventListener('click', () => {
+  const message = websocketSendEl.value;
   socket.emit('message', {message, from: currentUserId, to: selectedUserId});
-  messageEl.value = '';
-});
+  websocketReceiveEl.value = `You: ${message}\n${websocketReceiveEl.value}`;
 
-call.addEventListener('click', () => {
-  // Start video first, so that its included in the offer.
-  startLocalVideo().then(createOffer);
+  websocketSendEl.value = '';
+  websocketSendEl.focus();
 });
 
 window.addEventListener('beforeunload', () => {
@@ -186,8 +204,10 @@ window.addEventListener('beforeunload', () => {
   peerConnection.close();
 });
 
-const servers = null;
-peerConnection = new RTCPeerConnection(servers);
+/**
+ * The following items are related to RTCPeerConnection events.
+ */
+peerConnection = new RTCPeerConnection(configuration);
 peerConnection.addEventListener('icecandidate', (ev) => {
   if (ev.candidate) {
     const candidate = ev.candidate;
@@ -196,18 +216,65 @@ peerConnection.addEventListener('icecandidate', (ev) => {
         {candidate, from: currentUserId, to: selectedUserId});
   }
 });
-
 peerConnection.addEventListener('iceconnectionstatechange', (ev) => {
   console.log(ev.currentTarget.iceConnectionState);
+  if (ev.currentTarget.iceConnectionState === 'disconnected') {
+    Array.from(document.querySelectorAll('.remoteVideo')).forEach((video) => {
+      video.parentNode.removeChild(video);
+    });
+  }
 });
-
 peerConnection.addEventListener('track', (ev) => {
   // This is almost definitely not the right way to do things. This may or may
   // not be related.. but when I open multiple peerConnections, things fall apart.
   ev.streams.forEach((stream) => {
+    if (streams.indexOf(stream) !== -1) {
+      return
+    }
     const video = document.createElement('video');
     video.srcObject = stream;
     video.setAttribute('autoplay', 'true');
+    video.className = 'remoteVideo';
     videosEl.appendChild(video);
+    streams.push(stream);
   });
+});
+
+// "Calls" a different client by creating and sending an offer.
+call.addEventListener('click', () => {
+  // Start video first, so that its included in the offer.
+  startLocalVideo().then(createOffer);
+});
+
+
+/**
+ * The following items are related to data channel. While sending/receiving to
+ * the DataChannel is not necessary for creating a video chat... its super
+ * helpful to see if local/remote peer connections are established.
+ */
+localChannel = peerConnection.createDataChannel('sendDataChannel', null);
+localChannel.addEventListener('open', (ev) => {
+  console.log('DataChannel open', ev);
+  sendDatachannelEl.disabled = false;
+});
+localChannel.addEventListener('close', () => {
+  console.log('DataChannel close');
+  sendDatachannelEl.disabled = true;
+});
+
+
+peerConnection.addEventListener('datachannel', (ev) => {
+  const remoteDatachannel = ev.channel;
+  remoteDatachannel.addEventListener('message', (ev) => {
+    dataChannelReceiveEl.value = ev.data;
+  });
+});
+
+sendDatachannelEl.addEventListener('click', () => {
+  const data = dataChannelSendEl.value;
+  if (localChannel.readyState !== 'open') {
+    return;
+  }
+  localChannel.send(data);
+  dataChannelSendEl.value = '';
 });

@@ -5,21 +5,72 @@
   <meta charset="UTF-8" />
   <meta name="author" content="Tyler Stark">
   <meta name="viewport" content="initial-scale=1.0, width=device-width, user-scalable=no" />
+  <link href="https://fonts.googleapis.com/css?family=Raleway" rel="stylesheet">
   <link href='./style.css' rel='stylesheet' type='text/css'>
 </head>
 <body>
 <h1>WebRTC Sandbox</h1>
+
+<h2>Video</h2>
 <section class="videos" id="videos">
-  <video autoplay id="localVideo"></video>
-</section>
-<section class="buttons">
-  <button id="call">Call</button>
+  <video autoplay class="localVideo" muted id="localVideo"></video>
 </section>
 
-<ul id="users" class="users"></ul>
-<textarea id="message" placeholder="message"></textarea>
-<button id="send">Send</button>
+<h2>Websocket</h2>
+<p>User id: <span id="userId"></span></p>
+<section class="messageContainer">
+  <div class="row">
+    <div>
+      <h3>Other Users</h3>
+      <ul id="users" class="users"></ul>
+    </div>
+    <textarea id="websocketSend" placeholder="Send via websocket"></textarea>
+
+    <section class="buttons">
+      <button id="sendWebsocket">Websocket Message</button>
+      <button id="call">Call</button>
+    </section>
+
+    <textarea disabled id="websocketReceive" placeholder="Received via websocket"></textarea>
+  </div>
+
+  <p>
+    This application uses websockets as a signaling layer. "Websocket message"
+      emits a message to the server, which then broadcasts the message to the
+      intended socket connection (from the selected userId).
+  </p>
+  <p>
+    "Call" sends an `RTCSessionDescription` offer to a different client using a
+      websocket message.
+  </p>
+</section>
+
+
+<h2>DataChannel</h2>
+<section class="messageContainer">
+  <div class="row">
+    <textarea id="dataChannelSend" placeholder="Send via datachannel"></textarea>
+
+    <section class="buttons">
+      <button disabled id="sendDatachannel">DataChannel Message</button>
+    </section>
+
+    <textarea id="dataChannelReceive" disabled placeholder="Receive via datachannel"></textarea>
+  </div>
+  <p>
+    After the local RTCPeerConnection has established a connection with a
+      remote RTCPeerConnection, a DataChannel is also opened between the two
+    peers. This allows for a bi-directional communication.
+  </p>
+  <p>
+    While we still have a websocket connection that we can relay messages back
+      and forth... using a DataChannel helps debug if the RTCPeerConnections are
+      actually connected.
+  </p>
+</section>
+
 <div class="dialog" id="dialog"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/adapterjs/0.15.0/adapter.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.slim.js"></script>
 <script src="./script.js"></script>
 </body>
