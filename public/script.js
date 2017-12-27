@@ -234,6 +234,7 @@ peerConnection.addEventListener('track', (ev) => {
     const video = document.createElement('video');
     video.srcObject = stream;
     video.setAttribute('autoplay', 'true');
+    video.setAttribute('playsinline', 'true'); // Needed for iPhone to work.
     video.className = 'remoteVideo';
     videosEl.appendChild(video);
     streams.push(stream);

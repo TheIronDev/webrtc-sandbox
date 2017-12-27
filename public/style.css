@@ -28,7 +28,9 @@ p {
   bottom: 1rem;
   position: absolute;
   right: 1rem;
+  transform: rotateY(180deg);
   width: 100px;
+  z-index: 1;
 }
 
 .messageContainer {
