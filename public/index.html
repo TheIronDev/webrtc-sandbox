@@ -11,65 +11,73 @@
 <body>
 <h1>WebRTC Sandbox</h1>
 
-<h2>Video</h2>
 <section class="videos" id="videos">
   <video autoplay class="localVideo" id="localVideo" muted playsinline></video>
 </section>
 
-<h2>Websocket</h2>
-<p>User id: <span id="userId"></span></p>
-<section class="messageContainer">
-  <div class="row">
-    <div>
-      <h3>Other Users</h3>
-      <ul id="users" class="users"></ul>
+<p>My User id: <span id="userId"></span></p>
+<div class="containers">
+  <div class="container">
+    <h2>Users</h2>
+    <ul id="users" class="users"></ul>
+  </div>
+  <section class="container">
+    <h2>Websocket</h2>
+    <div class="row">
+      <textarea id="websocketSend" placeholder="Send via websocket"></textarea>
+
+      <section class="buttons">
+        <button disabled id="sendWebsocket">Websocket Message</button>
+        <button disabled id="call">Video Call</button>
+      </section>
+
+      <textarea disabled id="websocketReceive" placeholder="Received via websocket"></textarea>
     </div>
-    <textarea id="websocketSend" placeholder="Send via websocket"></textarea>
 
-    <section class="buttons">
-      <button id="sendWebsocket">Websocket Message</button>
-      <button id="call">Call</button>
-    </section>
+    <p>
+      This application uses websockets as a signaling layer. "Websocket message"
+        emits a message to the server, which then broadcasts the message to the
+        intended socket connection (from the selected userId).
+    </p>
+    <p>
+      "Call" sends an `RTCSessionDescription` offer to a different client using a
+        websocket message.
+    </p>
+  </section>
 
-    <textarea disabled id="websocketReceive" placeholder="Received via websocket"></textarea>
-  </div>
+  <section class="container">
+    <h2>DataChannel</h2>
+    <div class="row">
+      <textarea id="dataChannelSend" placeholder="Send via datachannel"></textarea>
 
-  <p>
-    This application uses websockets as a signaling layer. "Websocket message"
-      emits a message to the server, which then broadcasts the message to the
-      intended socket connection (from the selected userId).
-  </p>
-  <p>
-    "Call" sends an `RTCSessionDescription` offer to a different client using a
-      websocket message.
-  </p>
-</section>
+      <section class="buttons">
+        <button disabled id="sendDatachannel">DataChannel Message</button>
+      </section>
 
+      <textarea id="dataChannelReceive" disabled placeholder="Receive via datachannel"></textarea>
+    </div>
+    <p>
+      After the local RTCPeerConnection has established a connection with a
+        remote RTCPeerConnection, a DataChannel is also opened between the two
+      peers. This allows for a bi-directional communication.
+    </p>
+    <p>
+      While we still have a websocket connection that we can relay messages back
+        and forth... using a DataChannel helps debug if the RTCPeerConnections are
+        actually connected.
+    </p>
+  </section>
+</div>
 
-<h2>DataChannel</h2>
-<section class="messageContainer">
-  <div class="row">
-    <textarea id="dataChannelSend" placeholder="Send via datachannel"></textarea>
-
-    <section class="buttons">
-      <button disabled id="sendDatachannel">DataChannel Message</button>
-    </section>
-
-    <textarea id="dataChannelReceive" disabled placeholder="Receive via datachannel"></textarea>
-  </div>
-  <p>
-    After the local RTCPeerConnection has established a connection with a
-      remote RTCPeerConnection, a DataChannel is also opened between the two
-    peers. This allows for a bi-directional communication.
-  </p>
-  <p>
-    While we still have a websocket connection that we can relay messages back
-      and forth... using a DataChannel helps debug if the RTCPeerConnections are
-      actually connected.
-  </p>
-</section>
 
 <div class="dialog" id="dialog"></div>
+<div class="offerDialog" id="offerDialog">
+  <h2 class="offerFrom" id="offerFrom"></h2>
+  <div>
+    <button id="answerOffer">Answer</button>
+    <button id="rejectOffer">Reject</button>
+  </div>
+</div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/adapterjs/0.15.0/adapter.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.slim.js"></script>
 <script src="./script.js"></script>

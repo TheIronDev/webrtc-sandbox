@@ -1,8 +1,12 @@
 'use strict';
 
+const answerOfferEl = document.getElementById('answerOffer');
 const call = document.getElementById('call');
 const dialogEl = document.getElementById('dialog');
 const localVideoEl = document.getElementById('localVideo');
+const offerDialogEl = document.getElementById('offerDialog');
+const offerFromEl = document.getElementById('offerFrom');
+const rejectOfferEl = document.getElementById('rejectOffer');
 const dataChannelSendEl = document.getElementById('dataChannelSend');
 const dataChannelReceiveEl = document.getElementById('dataChannelReceive');
 const sendDatachannelEl = document.getElementById('sendDatachannel');
@@ -27,6 +31,9 @@ const iceServers = [
 ];
 const configuration = {iceServers};
 const streams = [];
+let pendingIceCandidates = [];
+let senders = [];
+let localStream;
 let peerConnection;
 let localChannel;
 let selectedUserId;
@@ -70,6 +77,7 @@ function addUser(userId, isNewUser = false) {
   }
 
   if (!selectedUserId) {
+    updateWebsocketButtons(true);
     selectedUserId = userId;
     radio.checked = true;
   }
@@ -99,7 +107,25 @@ function removeUser({userId}) {
   if (selectedUserId === userId) {
     selectedUserId = null;
   }
+  if (!usersEl.children.length) {
+    updateWebsocketButtons(false);
+  }
   displayDialogMessage(`${userId} left`);
+}
+
+/**
+ * Updates the ui of the websocket "call" and "message" buttons to be disabled
+ * or enabled.
+ * @param {boolean} isActive
+ */
+function updateWebsocketButtons(isActive) {
+  if (isActive) {
+    call.removeAttribute('disabled');
+    sendWebsocketEl.removeAttribute('disabled');
+  } else {
+    call.setAttribute('disabled', 'disabled');
+    sendWebsocketEl.setAttribute('disabled', 'disabled');
+  }
 }
 
 /**
@@ -113,11 +139,36 @@ function startLocalVideo() {
   // Note: Verify browser supports this, and catch failures.
   return navigator.mediaDevices.getUserMedia({video: true})
       .then((mediaStream) => {
+        localStream = mediaStream;
         localVideoEl.srcObject = mediaStream;
         mediaStream.getTracks().forEach((track) => {
           peerConnection.addTrack(track, mediaStream);
         });
       });
+}
+
+/**
+ * Renders a prompt to answer a call
+ * @param {number} from
+ * @return {Promise}
+ */
+function displayCallPrompt(from) {
+  return new Promise((resolve, reject) => {
+    offerFromEl.innerText = `Call From user: ${from}`;
+
+    // Accept should start local video and send over an answer.
+    answerOfferEl.onclick = () => {
+      resolve();
+      offerDialogEl.classList.remove('offerDialog_active');
+    };
+
+    // Reject click should simply close the dialog.
+    rejectOfferEl.onclick = () => {
+      reject();
+      offerDialogEl.classList.remove('offerDialog_active');
+    };
+    offerDialogEl.classList.add('offerDialog_active');
+  });
 }
 
 /**
@@ -140,12 +191,23 @@ function createOffer() {
  * @param {!RTCSessionDescription} description
  */
 function receiveOffer({from, description}) {
-  peerConnection.setRemoteDescription(description);
-  startLocalVideo().then(() => {
-    peerConnection.createAnswer().then((description) => {
-      peerConnection.setLocalDescription(description);
-      socket.emit('answer', {description, from: currentUserId, to: from});
+  return displayCallPrompt(from).then(() => {
+    peerConnection.setRemoteDescription(description);
+
+    if (pendingIceCandidates.length) {
+      pendingIceCandidates.forEach((iceCandidate) => {
+        peerConnection.addIceCandidate(iceCandidate);
+      });
+      pendingIceCandidates = [];
+    }
+    startLocalVideo().then(() => {
+      peerConnection.createAnswer().then((description) => {
+        peerConnection.setLocalDescription(description);
+        socket.emit('answer', {description, from: currentUserId, to: from});
+      });
     });
+  }).catch(() => {
+    // User clicked "Reject"
   });
 }
 
@@ -167,7 +229,36 @@ function receiveIceCandidate({candidate}) {
     sdpMLineIndex: candidate.sdpMLineIndex,
     candidate: candidate.candidate
   });
+
+  if (!peerConnection.getRemoteStreams().length) {
+    pendingIceCandidates.push(iceCandidate);
+    return;
+  }
   peerConnection.addIceCandidate(iceCandidate);
+}
+
+/**
+ * Disconnects the video, removing video elements and removing tracks.
+ */
+function disconnectVideo() {
+  Array.from(document.querySelectorAll('.remoteVideo')).forEach((video) => {
+    video.parentNode.removeChild(video);
+  });
+
+  // Disable local video.
+  localStream && localStream.getTracks().forEach((track) => {
+    track.stop();
+  });
+  localVideoEl.srcObject = null;
+
+  senders.forEach((sender) => {
+    peerConnection.removeTrack(sender);
+  });
+
+
+  // Lets start fresh and reset our peer connection and data channel.
+  peerConnection = createNewPeerConnection();
+  localChannel = createNewLocalChannel(peerConnection);
 }
 
 socket.emit('login', currentUserId);
@@ -189,6 +280,21 @@ usersEl.addEventListener('change', (ev) => {
   selectedUserId = parseInt(ev.target.value, 10);
 });
 
+// "Calls" a different client by creating and sending an offer.
+call.addEventListener('click', () => {
+  // Start video first, so that its included in the offer.
+  startLocalVideo().then(createOffer);
+});
+
+sendDatachannelEl.addEventListener('click', () => {
+  const data = dataChannelSendEl.value;
+  if (localChannel.readyState !== 'open') {
+    return;
+  }
+  localChannel.send(data);
+  dataChannelSendEl.value = '';
+});
+
 // Sends a text message to a different client.
 sendWebsocketEl.addEventListener('click', () => {
   const message = websocketSendEl.value;
@@ -199,83 +305,88 @@ sendWebsocketEl.addEventListener('click', () => {
   websocketSendEl.focus();
 });
 
-window.addEventListener('beforeunload', () => {
-  socket.emit('leave', currentUserId);
-  peerConnection.close();
-});
 
 /**
  * The following items are related to RTCPeerConnection events.
+ * @return {!RTCPeerConnection}
  */
-peerConnection = new RTCPeerConnection(configuration);
-peerConnection.addEventListener('icecandidate', (ev) => {
-  if (ev.candidate) {
-    const candidate = ev.candidate;
-    socket.emit(
-        'iceCandidate',
-        {candidate, from: currentUserId, to: selectedUserId});
-  }
-});
-peerConnection.addEventListener('iceconnectionstatechange', (ev) => {
-  console.log(ev.currentTarget.iceConnectionState);
-  if (ev.currentTarget.iceConnectionState === 'disconnected') {
-    Array.from(document.querySelectorAll('.remoteVideo')).forEach((video) => {
-      video.parentNode.removeChild(video);
-    });
-  }
-});
-peerConnection.addEventListener('track', (ev) => {
-  // This is almost definitely not the right way to do things. This may or may
-  // not be related.. but when I open multiple peerConnections, things fall apart.
-  ev.streams.forEach((stream) => {
-    if (streams.indexOf(stream) !== -1) {
-      return
+function createNewPeerConnection() {
+  const newPeerConnection = new RTCPeerConnection(configuration);
+  newPeerConnection.addEventListener('icecandidate', (ev) => {
+    if (ev.candidate) {
+      const candidate = ev.candidate;
+      socket.emit(
+          'iceCandidate',
+          {candidate, from: currentUserId, to: selectedUserId});
     }
-    const video = document.createElement('video');
-    video.srcObject = stream;
-    video.setAttribute('autoplay', 'true');
-    video.setAttribute('playsinline', 'true'); // Needed for iPhone to work.
-    video.className = 'remoteVideo';
-    videosEl.appendChild(video);
-    streams.push(stream);
   });
-});
-
-// "Calls" a different client by creating and sending an offer.
-call.addEventListener('click', () => {
-  // Start video first, so that its included in the offer.
-  startLocalVideo().then(createOffer);
-});
+  newPeerConnection.addEventListener('iceconnectionstatechange', (ev) => {
+    console.log(ev.currentTarget.iceConnectionState);
+    if (ev.currentTarget.iceConnectionState === 'disconnected') {
+      disconnectVideo();
+    }
+  });
+  newPeerConnection.addEventListener('track', (ev) => {
+    // This is almost definitely not the right way to do things. This may or may
+    // not be related.. but when I open multiple peerConnections, things break.
+    ev.streams.forEach((stream) => {
+      if (streams.indexOf(stream) !== -1) {
+        return;
+      }
+      const video = document.createElement('video');
+      video.srcObject = stream;
+      video.setAttribute('autoplay', 'true');
+      video.setAttribute('playsinline', 'true'); // Needed for iPhone to work.
+      video.className = 'remoteVideo';
+      videosEl.appendChild(video);
+      streams.push(stream);
+    });
+  });
+  return newPeerConnection;
+}
 
 
 /**
+ *
  * The following items are related to data channel. While sending/receiving to
  * the DataChannel is not necessary for creating a video chat... its super
  * helpful to see if local/remote peer connections are established.
+ * @param {!RTCPeerConnection} peerConnection
+ * @return {!RTCDataChannel}
  */
-localChannel = peerConnection.createDataChannel('sendDataChannel', null);
-localChannel.addEventListener('open', (ev) => {
-  console.log('DataChannel open', ev);
-  sendDatachannelEl.disabled = false;
-});
-localChannel.addEventListener('close', () => {
-  console.log('DataChannel close');
-  sendDatachannelEl.disabled = true;
-});
-
-
-peerConnection.addEventListener('datachannel', (ev) => {
-  const remoteDatachannel = ev.channel;
-  remoteDatachannel.addEventListener('message', (ev) => {
-    dataChannelReceiveEl.value = ev.data;
+function createNewLocalChannel(peerConnection) {
+  const newLocalChannel =
+      peerConnection.createDataChannel('sendDataChannel', null);
+  newLocalChannel.addEventListener('open', (ev) => {
+    console.log('DataChannel open', ev);
+    sendDatachannelEl.disabled = false;
   });
-});
+  newLocalChannel.addEventListener('close', () => {
+    console.log('DataChannel close');
+    sendDatachannelEl.disabled = true;
+    disconnectVideo();
+  });
 
-sendDatachannelEl.addEventListener('click', () => {
-  const data = dataChannelSendEl.value;
-  if (localChannel.readyState !== 'open') {
-    return;
-  }
-  localChannel.send(data);
-  dataChannelSendEl.value = '';
+  peerConnection.addEventListener('datachannel', (ev) => {
+    const remoteDatachannel = ev.channel;
+    remoteDatachannel.addEventListener('message', (ev) => {
+      dataChannelReceiveEl.value = ev.data;
+    });
+  });
+
+  return newLocalChannel;
+}
+
+
+// Create a new peer connection at the start of the application
+peerConnection = createNewPeerConnection();
+
+// Create a new local channel at the start of the application.
+localChannel = createNewLocalChannel(peerConnection);
+
+
+window.addEventListener('beforeunload', () => {
+  socket.emit('leave', currentUserId);
+  localChannel.close();
+  peerConnection.close();
 });

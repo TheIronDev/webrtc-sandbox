@@ -1,5 +1,6 @@
 * {box-sizing: border-box}
 body {font-family: 'Raleway', sans-serif; font-size: 10px;}
+h2 {margin: 0 0 0.5rem;}
 ul {list-style: none; padding: 0}
 video {max-height: 300px;width: 100%;}
 p {
@@ -7,17 +8,49 @@ p {
   margin: 0.5rem 0;
   padding: 0.5rem;
 }
+button {
+  background: #2a63d4;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  color: #fff;
+  cursor: pointer;
+  margin-bottom: 0.5rem;
+  min-height: 2rem;
+  min-width: 5rem;
+}
+button[disabled] {
+  background: #ccc;
+  cursor: not-allowed;
+}
 
 .buttons {
   display: flex;
   flex-direction: column;
+  min-height: 5rem;
+}
+
+.container {
+  border: 1px solid #666;
+  box-shadow: 0 5px 5px -5px #666;
+  margin-right: 1rem;
+  min-width: 30%;
+  padding: 1rem;
+}
+
+.container:last-child {
+  margin-right: 0;
+}
+
+.containers {
+  display: flex;
+  flex-direction: row;
 }
 
 .dialog {
   background: #fff;
   border: 1px solid #ccc;
   box-shadow: 0 2px 2px -2px #666;
-  padding: 1rem;
+  padding: 0.5rem;
   position: fixed;
   right: 1rem;
   top: 1rem;
@@ -25,6 +58,7 @@ p {
 }
 
 .localVideo {
+  border: 1px solid #ccc;
   bottom: 1rem;
   position: absolute;
   right: 1rem;
@@ -33,17 +67,34 @@ p {
   z-index: 1;
 }
 
-.messageContainer {
-  border: 1px solid #666;
-  box-shadow: 0 5px 5px -5px #666;
-  margin-bottom: 1rem;
-  padding: 1rem;
+.offerDialog {
+  align-items: center;
+  background: #222;
+  border: 1px solid #ccc;
+  display: flex;
+  flex-direction: column;
+  height: 90%;
+  justify-content: center;
+  margin: 5%;
+  position: fixed;
+  right: -110%;
+  top: 0;
+  width: 90%;
+  z-index: 1;
+}
+
+.offerDialog_active {
+  right: 0;
+}
+
+.offerFrom {
+  color: #fafafa;
 }
 
 .row {
   display: flex;
   flex-direction: row;
-  justify-content: space-evenly;
+  justify-content: space-between;
 }
 
 .videos {
@@ -55,4 +106,14 @@ p {
   padding: 1rem;
   position: relative;
   text-align: center;
+}
+
+@media (max-width: 960px) {
+  .container {
+    margin-bottom: 1rem;
+    margin-right: 0;
+  }
+  .containers {
+    flex-direction: column;
+  }
 }
