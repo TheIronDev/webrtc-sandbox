@@ -9,6 +9,17 @@ A simple video chat application.
 
 The intent of this project is learn and play around with WebRTC.
 
+## Development
+
+Run the following:
+
+```
+npm install
+npm run development
+```
+
+This will install dependencies, start watching for server changes, and start the server.
+
 ## TODO:
 
 - [ ] Create a custom stun server (Turn sounds pricey).

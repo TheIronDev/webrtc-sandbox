@@ -4,6 +4,7 @@
   "description": "WebRTC sandbox",
   "main": "index.js",
   "scripts": {
+    "develop": "webpack --watch & node index.js",
     "start": "node index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -21,7 +22,8 @@
     "hapi": "^17.1.1",
     "inert": "^5.0.1",
     "path": "^0.12.7",
-    "socket.io": "^2.0.4"
+    "socket.io": "^2.0.4",
+    "webpack": "^3.10.0"
   },
   "engines": {
     "node": "8.8.1"

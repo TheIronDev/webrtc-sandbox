@@ -1,4 +1,5 @@
 node_modules
+public/bundles/*.js
 
 # Elastic Beanstalk Files
 .elasticbeanstalk/*

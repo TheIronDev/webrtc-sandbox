@@ -4,6 +4,14 @@ const Hapi = require('hapi');
 const Inert = require('inert');
 const Path = require('path');
 const socketIO = require('socket.io');
+const webpack = require("webpack");
+const webpackConfig = require('./webpack.config');
+
+webpack(webpackConfig, (err, stats) => {
+  if (err || stats.hasErrors()) {
+      console.log('Serverside error: ', err)
+  }
+});
 
 // Create a server with a host and port
 const server = Hapi.server({
