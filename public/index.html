@@ -9,75 +9,64 @@
   <link href='./style.css' rel='stylesheet' type='text/css'>
 </head>
 <body>
-<h1>WebRTC Sandbox</h1>
+<main id="app">
+  <h1>WebRTC Sandbox</h1>
 
-<section class="videos" id="videos">
-  <video autoplay class="localVideo" id="localVideo" muted playsinline></video>
-</section>
-
-<p>My User id: <span id="userId"></span></p>
-<div class="containers">
-  <div class="container">
-    <h2>Users</h2>
-    <ul id="users" class="users"></ul>
-  </div>
-  <section class="container">
-    <h2>Websocket</h2>
-    <div class="row">
-      <textarea id="websocketSend" placeholder="Send via websocket"></textarea>
-
-      <section class="buttons">
-        <button disabled id="sendWebsocket">Websocket Message</button>
-        <button disabled id="call">Video Call</button>
-      </section>
-
-      <textarea disabled id="websocketReceive" placeholder="Received via websocket"></textarea>
-    </div>
-
-    <p>
-      This application uses websockets as a signaling layer. "Websocket message"
-        emits a message to the server, which then broadcasts the message to the
-        intended socket connection (from the selected userId).
-    </p>
-    <p>
-      "Call" sends an `RTCSessionDescription` offer to a different client using a
-        websocket message.
-    </p>
+  <section class="videos" id="videos">
+    <remote-video
+        v-for="video in remoteVideos"
+        v-bind:video="video"
+        v-bind:key="video.id"></remote-video>
+    <video autoplay class="localVideo" muted playsinline ref="localVideo"></video>
   </section>
 
-  <section class="container">
-    <h2>DataChannel</h2>
-    <div class="row">
-      <textarea id="dataChannelSend" placeholder="Send via datachannel"></textarea>
-
-      <section class="buttons">
-        <button disabled id="sendDatachannel">DataChannel Message</button>
-      </section>
-
-      <textarea id="dataChannelReceive" disabled placeholder="Receive via datachannel"></textarea>
+  <p>My User id: {{userId}}</p>
+  <p>Selected User id: {{selectedUserId}}</p>
+  <div class="containers">
+    <div class="container">
+      <h2>Users</h2>
+      <ul class="users">
+        <user-list-item
+            :selected-user-id="selectedUserId"
+            :key="user.id"
+            v-bind:user="user"
+            v-for="user in otherUsers"
+            v-on:selectUser="onSelectUser"></user-list-item>
+      </ul>
     </div>
-    <p>
-      After the local RTCPeerConnection has established a connection with a
-        remote RTCPeerConnection, a DataChannel is also opened between the two
-      peers. This allows for a bi-directional communication.
-    </p>
-    <p>
-      While we still have a websocket connection that we can relay messages back
-        and forth... using a DataChannel helps debug if the RTCPeerConnections are
-        actually connected.
-    </p>
-  </section>
-</div>
+    <section class="container">
+      <h2>Websocket</h2>
+      <div class="messagesComponent">
 
-
-<div class="dialog" id="dialog"></div>
-<div class="offerDialog" id="offerDialog">
-  <h2 class="offerFrom" id="offerFrom"></h2>
-  <div>
-    <button id="answerOffer">Answer</button>
-    <button id="rejectOffer">Reject</button>
+        <textarea class="receivedMessages" disabled placeholder="Received via websocket" v-model="receivedWebsocketMsg"></textarea>
+        <div class="row messageEntry">
+          <textarea class="messageInput" placeholder="Send via websocket" ref="websocketMsg" v-model="websocketMsg"></textarea>
+          <button class="sendMessageButton" :disabled="!selectedUserId" v-on:click="onSendWebsocketMsgClick">Send</button>
+        </div>
+        <button :disabled="!selectedUserId" v-on:click="onCallClick">Video Call</button>
+      </div>
+      <h2>DataChannel</h2>
+      <div class="messagesComponent">
+        <textarea class="receivedMessages" :disabled="!isDatachannelActive" placeholder="Receive via datachannel" v-model="receivedDatachannelMsg"></textarea>
+        <div class="row messageEntry">
+          <textarea class="messageInput" placeholder="Send via datachannel" ref="datachannelMsg" v-model="datachannelMsg"></textarea>
+          <button class="sendMessageButton" :disabled="!isDatachannelActive" v-on:click="onSendDatachannelMsgClick">Send</button>
+        </div>
+      </div>
+    </section>
   </div>
-</div>
+
+  <div class="offerDialog" v-bind:class="{offerDialog_active: isOfferDialogActive}">
+    <h2 class="offerFrom">Call from {{offeringUser}}</h2>
+    <div>
+      <button v-on:click="onAnswerOfferClick">Answer</button>
+      <button v-on:click="onRejectOfferClick">Reject</button>
+    </div>
+  </div>
+</main>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.13/vue.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/adapterjs/0.15.0/adapter.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.slim.js"></script>
 <script src="./script.js"></script>

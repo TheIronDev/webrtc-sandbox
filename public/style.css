@@ -67,6 +67,10 @@ button[disabled] {
   z-index: 1;
 }
 
+.messagesComponent {
+  position: relative;
+}
+
 .offerDialog {
   align-items: center;
   background: #222;
@@ -91,10 +95,40 @@ button[disabled] {
   color: #fafafa;
 }
 
+.receivedMessages {
+  min-height: 5rem;
+  width: 100%;
+}
+
 .row {
   display: flex;
   flex-direction: row;
   justify-content: space-between;
+}
+
+.sendMessageButton {
+  position: absolute;
+  right: 0;
+  z-index: 1;
+}
+
+.messageEntry {
+  padding: 1rem 0;
+}
+
+.messageInput {
+  width: 100%;
+}
+
+.userListItem {
+  border: 1px solid #aaa;
+  cursor: pointer;
+  margin-top: -1px;
+  padding: 1rem;
+}
+
+.userListItem_active {
+  background: #fafafa;
 }
 
 .videos {

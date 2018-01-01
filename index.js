@@ -43,7 +43,7 @@ async function start() {
 
     socket.on('message', ({from, to, message}) => {
       // Send a private message.
-      socket.to(users[to]).emit('receivedMessage', `${from}: ${message}`);
+      socket.to(users[to]).emit('receivedMessage', `${from} -> You: ${message}`);
     });
 
     socket.on('offer', ({from, to, description}) => {
