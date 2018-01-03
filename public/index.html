@@ -20,11 +20,11 @@
     <video autoplay class="localVideo" muted playsinline ref="localVideo"></video>
   </section>
 
-  <p>My User id: {{userId}}</p>
-  <p>Selected User id: {{selectedUserId}}</p>
   <div class="containers">
     <div class="container">
       <h2>Users</h2>
+
+      <p>My User id: {{userId}}</p>
       <ul class="users">
         <user-list-item
             :selected-user-id="selectedUserId"
@@ -36,6 +36,7 @@
     </div>
     <section class="container">
       <h2>Websocket</h2>
+      <p>Selected User id: {{selectedUserId}}</p>
       <div class="messagesComponent">
 
         <textarea class="receivedMessages" disabled placeholder="Received via websocket" v-model="receivedWebsocketMsg"></textarea>
@@ -46,6 +47,7 @@
         <button :disabled="!selectedUserId" v-on:click="onCallClick">Video Call</button>
       </div>
       <h2>DataChannel</h2>
+      <p>Number of open datachannels: {{datachannelCount}}</p>
       <div class="messagesComponent">
         <textarea class="receivedMessages" :disabled="!isDatachannelActive" placeholder="Receive via datachannel" v-model="receivedDatachannelMsg"></textarea>
         <div class="row messageEntry">
@@ -66,10 +68,6 @@
 </main>
 
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.13/vue.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/adapterjs/0.15.0/adapter.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.slim.js"></script>
-<script src="./script.js"></script>
 <script src="./bundles/bundle.js"></script>
 </body>
 </html>

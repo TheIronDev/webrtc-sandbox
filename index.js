@@ -51,19 +51,19 @@ async function start() {
 
     socket.on('message', ({from, to, message}) => {
       // Send a private message.
-      socket.to(users[to]).emit('receivedMessage', `${from} -> You: ${message}`);
+      socket.to(users[to]).emit('message', {from, message: `${from} -> You: ${message}`});
     });
 
     socket.on('offer', ({from, to, description}) => {
-      socket.to(users[to]).emit('receivedOffer', {from, description});
+      socket.to(users[to]).emit('offer', {from, description});
     });
 
     socket.on('answer', ({from, to, description}) => {
-      socket.to(users[to]).emit('receivedAnswer', {from, description});
+      socket.to(users[to]).emit('answer', {from, description});
     });
 
     socket.on('iceCandidate', ({from, to, candidate}) => {
-      socket.to(users[to]).emit('receivedIceCandidate', {from, candidate});
+      socket.to(users[to]).emit('iceCandidate', {from, candidate});
     });
   });
 

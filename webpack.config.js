@@ -6,5 +6,10 @@ module.exports = {
     output: {
         path: path.resolve('./public/bundles/'),
         filename: 'bundle.js'
+    },
+    resolve: {
+        alias: {
+            vue: 'vue/dist/vue.js'
+        }
     }
 };

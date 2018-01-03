@@ -128,7 +128,8 @@ button[disabled] {
 }
 
 .userListItem_active {
-  background: #fafafa;
+  background: #2a63d4;
+  color: #fff;
 }
 
 .videos {
@@ -136,6 +137,7 @@ button[disabled] {
   background: #333;
   display: flex;
   justify-content: center;
+  margin-bottom: 1rem;
   min-height: 10rem;
   padding: 1rem;
   position: relative;
